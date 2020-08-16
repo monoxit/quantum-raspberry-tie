@@ -62,8 +62,8 @@ if (len(sys.argv)>1):
         if type(parameter) is str:
             print("Parameter ",p," ",parameter)
             if '-noq' in parameter: QWhileThinking = False # do the rainbow wash across the qubit pattern while "thinking"
-            if '-tee' in parameter: UseTee = True          # use the new tee-shaped 5 qubit layout for the display
-            if '-e' in parameter: UseEmulator = True       # force use of the SenseHat emulator even if hardware is installed
+            elif '-tee' in parameter: UseTee = True          # use the new tee-shaped 5 qubit layout for the display
+            elif '-e' in parameter: UseEmulator = True       # force use of the SenseHat emulator even if hardware is installed
             elif ':' in parameter:                         # parse two-component parameters
                 token = parameter.split(':')[0]            # before the colon is the key
                 value = parameter.split(':')[1]            # after the colon is the value
@@ -72,7 +72,6 @@ if (len(sys.argv)>1):
             else:
                 #print (type(sys.argv[1]))
                 qasmfileinput=parameter                    # if not any of the above parameters, presume it's the qasm file
-              
 
 # Now we are going to try to instantiate the SenseHat, unless we have asked for the emulator.
 # if it fails, we'll try loading the emulator 
@@ -109,7 +108,7 @@ angle = 180
 result = None
 runcounter=0
 maxpattern='00000'
-interval=5
+interval=10
 stalled_time = 60 # how many seconds we're willing to wait once a job status is "Running"
 
 thinking=False    # used to tell the display thread when to show the result
@@ -213,12 +212,16 @@ def showqubits(pattern='0000000000000000'):
    for p in range(64):          #first set all pixels off
            pixels[p]=[0,0,0]
    for q in range(len(display)):
-      if pattern[q]=='1':         # if the digit is "1" assign blue
+      if q < len(pattern):
+         if pattern[q]=='1':         # if the digit is "1" assign blue
+            for p in display[q]:
+               pixels[p]=[0,0,255]
+         else:                       # otherwise assign it red
+            for p in display[q]:
+               pixels[p]=[255,0,0]
+      else:
          for p in display[q]:
-            pixels[p]=[0,0,255]
-      else:                       # otherwise assign it red
-         for p in display[q]:
-            pixels[p]=[255,0,0]
+            pixels[p]=[0,255,0]
 
    hat.set_pixels(pixels)         # turn them all on
 
@@ -483,6 +486,7 @@ glowing = glow()
 #-------------------------------------------------
             
 rainbowTie = Thread(target=glowing.run)     # create the display thread
+rainbowTie.setDaemon(True)
 startIBMQ()                                  # try to connect and instantiate the IBMQ 
 
 exptfile = open(qasmfilename,'r') # open the file with the OPENQASM code in it
@@ -567,7 +571,8 @@ while Looping:
                        if qdone :
                            # only get here once we get DONE status
                            result=qjob.result()     # get the result
-                           counts=result.get_counts(qcirc)   
+                           counts=result.get_counts(qcirc)
+                           print(counts)
                            maxpattern=max(counts,key=counts.get)
                            maxvalue=counts[maxpattern]
                            print("Maximum value:",maxvalue, "Maximum pattern:",maxpattern)
