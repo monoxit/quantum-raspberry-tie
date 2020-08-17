@@ -47,6 +47,7 @@ IBMQVersion = qiskit.__qiskit_version__
 print("       ....warnings")
 import warnings
 
+NUMBER_OF_SHOTS = 512
 
 #Check any command arguments to see if we're forcing the emulator or changing the backend
 UseEmulator = False
@@ -108,7 +109,7 @@ angle = 180
 result = None
 runcounter=0
 maxpattern='00000'
-interval=10
+interval=60
 stalled_time = 60 # how many seconds we're willing to wait once a job status is "Running"
 
 thinking=False    # used to tell the display thread when to show the result
@@ -226,6 +227,43 @@ def showqubits(pattern='0000000000000000'):
    hat.set_pixels(pixels)         # turn them all on
 
 
+def show_histogram(hat, counts):
+   if len(counts) < 1:
+      return
+      
+   pattern_size = len(list(counts)[0])
+
+   if pattern_size > 3:
+      return
+   
+   cbit_patterns = {1:['0','1'],
+                    2:['00','01','10','11'],
+                    3:['000','001','010','011','100','101','110','111']
+                    }
+   
+   raw_pixels = [[0] * 3 for i in range(64)]
+   number_of_lines = len(cbit_patterns[pattern_size])
+   raw_pixels[0:number_of_lines * 8] = \
+             [[255,0,0] for i in range(number_of_lines * 8)]
+
+   per_pixel_value = NUMBER_OF_SHOTS / 8.0
+
+   index = 0
+   for cbit_pattern in cbit_patterns[pattern_size]:
+      if cbit_pattern in counts.keys():
+         count = counts[cbit_pattern]
+         number_of_pixels = count / per_pixel_value
+         raw_pixels[index:index+int(number_of_pixels)] = \
+                   [[0,0,255] for i in range(int(number_of_pixels))]
+         if int(number_of_pixels) < 8:
+            color_factor = number_of_pixels - int(number_of_pixels)
+            blue = int(color_factor * 255)
+            red = 255 - blue
+            raw_pixels[index+int(number_of_pixels)] = [red,0,blue]
+      index+=8
+      
+   hat.set_pixels(raw_pixels)
+
 #--------------------------------------------------
 #    blinky lets us use the rainbow rotation code to fill the bowtie pattern
 #       it can be interrupted by tapping the joystick or if
@@ -284,7 +322,7 @@ def blinky(time=20,experimentID=''):
 #    build a class glow so we can launch display control as a thread
 #------------------------------------------------
 class glow():
-   global thinking,hat, maxpattern, shutdown,off,Qlogo
+   global thinking,hat, maxpattern, shutdown,off,Qlogo, counts
 
    def __init__(self):
       self._running = True
@@ -308,6 +346,10 @@ class glow():
               blinky(.1)
            else:
               showqubits(maxpattern)
+              if qdone:
+                 sleep(2)
+                 show_histogram(hat,counts)
+                 sleep(2)
 
 
 #----------------------------------------------------------------
@@ -536,7 +578,7 @@ while Looping:
                    print('     executing quantum circuit... on ',Q.name())
                    print(qcirc)
                    try:
-                       qjob=execute(qcirc, Q, shots=500, memory=False)
+                       qjob=execute(qcirc, Q, shots=NUMBER_OF_SHOTS, memory=False)
                        Looping = 'simul' in Q.name()
                        if runcounter < 3: print("Using ", Q.name(), " ... Looping is set ", Looping)
                    except:
@@ -589,14 +631,16 @@ while Looping:
    
    myTimer=process_time()
    while not goAgain:
-      for event in hat.stick.get_events():   
+      for event in hat.stick.get_events():
          if event.action == 'pressed':      #somebody tapped the joystick -- go now
             goAgain=True
             blinky(.001)
             hat.set_pixels(pixels)
          if event.action == 'held' and event.direction =='middle':
-            shutdown=True 
+            print('WILL SHUTDOWN SOON IN', interval)
+            shutdown=True
          if event.action == 'held' and event.direction !='middle':
+             print('WILL STOP SOON IN',interval)
              Looping = False
              break
       if (process_time()-myTimer>interval):       # 10 seconds elapsed -- go now
