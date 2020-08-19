@@ -640,13 +640,15 @@ while Looping:
             goAgain=True
             blinky(.001)
             hat.set_pixels(pixels)
-         if event.action == 'held' and event.direction =='middle':
-            print('WILL SHUTDOWN SOON IN', interval)
+         if event.action == 'held' and event.direction =='middle' and not shutdown:
             shutdown=True
-         if event.action == 'held' and event.direction !='middle':
-             print('WILL STOP SOON IN',interval)
-             Looping = False
-             break
+            str = 'Shutdown in ' + str(interval) + ' sec'
+            hat.show_message(str, text_colour=(255,255,255))
+         if event.action == 'held' and event.direction !='middle' and Looping:
+            Looping = False
+            str = 'Terminating... ' + str(interval) + ' sec'
+            hat.show_message(str, text_colour=(255,255,255))
+            break
       if (process_time()-myTimer>interval):       # 10 seconds elapsed -- go now
             goAgain=True
 
