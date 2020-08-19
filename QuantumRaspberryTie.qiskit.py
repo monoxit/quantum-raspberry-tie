@@ -636,18 +636,20 @@ while Looping:
    myTimer=process_time()
    while not goAgain:
       for event in hat.stick.get_events():
-         if event.action == 'pressed':      #somebody tapped the joystick -- go now
+         if event.action == 'released' and event.direction == 'middle':      #somebody tapped the joystick -- go now
             goAgain=True
             blinky(.001)
             hat.set_pixels(pixels)
          if event.action == 'held' and event.direction =='middle' and not shutdown:
+            str = 'HALT'
+            hat.show_message(str, text_colour=(255,255,255))
+            sleep(5)
             shutdown=True
-            str = 'Shutdown in ' + str(interval) + ' sec'
-            hat.show_message(str, text_colour=(255,255,255))
          if event.action == 'held' and event.direction !='middle' and Looping:
-            Looping = False
-            str = 'Terminating... ' + str(interval) + ' sec'
+            str = 'EXIT IN ' + str(interval)
             hat.show_message(str, text_colour=(255,255,255))
+            sleep(5)
+            Looping = False
             break
       if (process_time()-myTimer>interval):       # 10 seconds elapsed -- go now
             goAgain=True
