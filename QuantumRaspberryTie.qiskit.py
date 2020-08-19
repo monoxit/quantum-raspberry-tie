@@ -47,6 +47,9 @@ IBMQVersion = qiskit.__qiskit_version__
 print("       ....warnings")
 import warnings
 
+import termios
+import tty
+
 NUMBER_OF_SHOTS = 512
 
 #Check any command arguments to see if we're forcing the emulator or changing the backend
@@ -516,8 +519,9 @@ def startIBMQ():
 #   Main program loop  (note: we turned on a "Q" earlier at line 202)
 #
 #################################################################################
-
-
+fd = sys.stdin.fileno()
+old_tty_setting =  termios.tcgetattr(fd)
+tty.setcbreak(fd)
 
 # Instantiate an instance of our glow class
 print("Instantiating glow...")
@@ -645,5 +649,8 @@ while Looping:
              break
       if (process_time()-myTimer>interval):       # 10 seconds elapsed -- go now
             goAgain=True
+
+termios.tcsetattr(fd, termios.TCSANOW, old_tty_setting)
+termios.tcflush(fd, termios.TCIFLUSH)
 
 print("Program Execution ended normally")
