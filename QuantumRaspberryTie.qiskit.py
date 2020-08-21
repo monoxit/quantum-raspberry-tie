@@ -484,31 +484,24 @@ def startIBMQ():
     print('IBMQ Provider v',IBMQP_Vers)
     print ('Pinging IBM Quantum Experience before start')
     p=ping('https://api.quantum-computing.ibm.com',1,0.5,True)
-    
+
     try:
-        print("requested backend: ",backendparm)
-    except:
-        sleep(0)
+        backendparm
+        backend = backendparm
+        interval = 300
+    except NameError:
+        # specify the simulator as the backend
+        backend = 'ibmq_qasm_simulator'
         
-    # specify the simulator as the backend
-    backend='ibmq_qasm_simulator'   
+    print("requested backend: ",backend)
+  
     if p==200:
         if (IBMQP_Vers > 0.2):   # The new authentication technique with provider as the object
             provider0=IBMQ.load_account()
-            try:
-                Q=provider0.get_backend(backendparm)
-            except:
-                Q=provider0.get_backend(backend)
-            else:
-                interval = 300
+            Q=provider0.get_backend(backend)
         else:                    # The older IBMQ authentication technique
             IBMQ.load_accounts()
-            try:
-                Q=IBMQ.get_backend(backendparm)
-            except:
-                Q=IBMQ.get_backend(backend)
-            else:
-                interval = 300
+            Q=IBMQ.get_backend(backend)
     else:
         exit()
 #-------------------------------------------------------------------------------
