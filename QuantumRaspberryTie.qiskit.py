@@ -512,142 +512,144 @@ def startIBMQ():
 #   Main program loop  (note: we turned on a "Q" earlier at line 202)
 #
 #################################################################################
-fd = sys.stdin.fileno()
-old_tty_setting =  termios.tcgetattr(fd)
-tty.setcbreak(fd)
-
-# Instantiate an instance of our glow class
-print("Instantiating glow...")
-glowing = glow()
-
-#-------------------------------------------------
-#  OK, let's get this shindig started
-#-------------------------------------------------
-            
-rainbowTie = Thread(target=glowing.run)     # create the display thread
-rainbowTie.setDaemon(True)
-startIBMQ()                                  # try to connect and instantiate the IBMQ 
-
-exptfile = open(qasmfilename,'r') # open the file with the OPENQASM code in it
-qasm= exptfile.read()            # read the contents into our experiment string
-
-if (len(qasm)<5):                # if that is too short to be real, exit
-    exit
-else:                            # otherwise print it to the console for reference
-    print("OPENQASM code to send:\n",qasm)
-    
-qcirc=QuantumCircuit.from_qasm_str(qasm)   
-print (qcirc)
-if (qcirc.width()/2 > 5):
-    display = ibm_qx16
-    maxpattern='0000000000000000'
-    print ("circuit width: ",qcirc.width()/2," using 16 qubit display")
-else:
-    if (UseTee): display = ibm_qx5t
-    else: display = ibm_qx5
-    maxpattern='00000'
-    print ("circuit width: ",qcirc.width()/2," using 5 qubit display")
-
-#backend='simulator' 
-rainbowTie.start()                          # start the display thread
-
-
-while Looping:
-   runcounter += 1
+try:
+   fd = sys.stdin.fileno()
+   old_tty_setting =  termios.tcgetattr(fd)
+   tty.setcbreak(fd)
    
-   try:
-       p=ping()
-   except:
-       print("connection problem with IBMQ")
+   # Instantiate an instance of our glow class
+   print("Instantiating glow...")
+   glowing = glow()
+   
+   #-------------------------------------------------
+   #  OK, let's get this shindig started
+   #-------------------------------------------------
+               
+   rainbowTie = Thread(target=glowing.run)     # create the display thread
+   rainbowTie.setDaemon(True)
+   startIBMQ()                                  # try to connect and instantiate the IBMQ 
+   
+   exptfile = open(qasmfilename,'r') # open the file with the OPENQASM code in it
+   qasm= exptfile.read()            # read the contents into our experiment string
+   
+   if (len(qasm)<5):                # if that is too short to be real, exit
+       exit
+   else:                            # otherwise print it to the console for reference
+       print("OPENQASM code to send:\n",qasm)
+       
+   qcirc=QuantumCircuit.from_qasm_str(qasm)   
+   print (qcirc)
+   if (qcirc.width()/2 > 5):
+       display = ibm_qx16
+       maxpattern='0000000000000000'
+       print ("circuit width: ",qcirc.width()/2," using 16 qubit display")
    else:
-       if p==200:
-           orient()
-           showlogo = True
-           thinking = True
-           try:
-               backend_status = Q.status()  # check the availability
-           except:
-               print('Problem getting backend status... waiting to try again')
-           else:
-               print('Backend Status: ',backend_status.status_msg)
-               if Q.status().status_msg == 'active':
-                   
-                   print('     executing quantum circuit... on ',Q.name())
-                   print(qcirc)
-                   try:
-                       qjob=execute(qcirc, Q, shots=NUMBER_OF_SHOTS, memory=False)
-                       Looping = 'simul' in Q.name()
-                       if runcounter < 3: print("Using ", Q.name(), " ... Looping is set ", Looping)
-                   except:
-                       print("connection problem... half a tick and we'll try again...")
-                       sleep(.5)
-                   else:
-                       # Don't bother with this part if the execute throws an exception     
-                       running_start = 0
-                       running_timeout = False
-                       showlogo =  False
-                       qdone = False
-                       while not (qdone or running_timeout):
-                           #result=qjob.result()     # get the result
-                           try:
-                               qstatus = qjob.status()
-                           except:
-                               print("Problem getting status, trying again...")
-                               print (qstatus)
-                           else:
-                               print(runcounter,": ",qstatus)
-                               if qstatus == JobStatus.RUNNING :
-                                    if running_start == 0 :
-                                       running_start = process_time()
-                                    else :
-                                        if process_time()-running_start > stalled_time :
-                                            running_timeout = True
-                               if qstatus == JobStatus.ERROR:
-                                    running_timeout = True
-                               if qstatus == JobStatus.DONE :
-                                    qdone = True
-                              
-                       if qdone :
-                           # only get here once we get DONE status
-                           result=qjob.result()     # get the result
-                           counts=result.get_counts(qcirc)
-                           print(counts)
-                           maxpattern=max(counts,key=counts.get)
-                           maxvalue=counts[maxpattern]
-                           print("Maximum value:",maxvalue, "Maximum pattern:",maxpattern)
-                           thinking = False  # this cues the display thread to show the qubits in maxpattern
-                       if running_timeout :
-                            print(backend,' Queue appears to have stalled. Restarting Job.')    
-               else:
-                    print(backend,'busy; waiting to try again')
-       else:
-            print(p,'response to ping; waiting to try again')
-
-   goAgain=False                    # wait to do it again
-   print('Waiting ',interval,'s before next run...')
+       if (UseTee): display = ibm_qx5t
+       else: display = ibm_qx5
+       maxpattern='00000'
+       print ("circuit width: ",qcirc.width()/2," using 5 qubit display")
    
-   myTimer=process_time()
-   while not goAgain:
-      for event in hat.stick.get_events():
-         if event.action == 'released' and event.direction == 'middle':      #somebody tapped the joystick -- go now
-            goAgain=True
-            blinky(.001)
-            hat.set_pixels(pixels)
-         if event.action == 'held' and event.direction =='middle' and not shutdown:
-            str = 'HALT'
-            hat.show_message(str, text_colour=(255,255,255))
-            sleep(5)
-            shutdown=True
-         if event.action == 'held' and event.direction !='middle' and Looping:
-            str = 'EXIT IN ' + str(interval)
-            hat.show_message(str, text_colour=(255,255,255))
-            sleep(5)
-            Looping = False
-            break
-      if (process_time()-myTimer>interval):       # 10 seconds elapsed -- go now
-            goAgain=True
+   #backend='simulator' 
+   rainbowTie.start()                          # start the display thread
+   
+   
+   while Looping:
+      runcounter += 1
+      
+      try:
+          p=ping()
+      except:
+          print("connection problem with IBMQ")
+      else:
+          if p==200:
+              orient()
+              showlogo = True
+              thinking = True
+              try:
+                  backend_status = Q.status()  # check the availability
+              except:
+                  print('Problem getting backend status... waiting to try again')
+              else:
+                  print('Backend Status: ',backend_status.status_msg)
+                  if Q.status().status_msg == 'active':
+                      
+                      print('     executing quantum circuit... on ',Q.name())
+                      print(qcirc)
+                      try:
+                          qjob=execute(qcirc, Q, shots=NUMBER_OF_SHOTS, memory=False)
+                          Looping = 'simul' in Q.name()
+                          if runcounter < 3: print("Using ", Q.name(), " ... Looping is set ", Looping)
+                      except:
+                          print("connection problem... half a tick and we'll try again...")
+                          sleep(.5)
+                      else:
+                          # Don't bother with this part if the execute throws an exception     
+                          running_start = 0
+                          running_timeout = False
+                          showlogo =  False
+                          qdone = False
+                          while not (qdone or running_timeout):
+                              #result=qjob.result()     # get the result
+                              try:
+                                  qstatus = qjob.status()
+                              except:
+                                  print("Problem getting status, trying again...")
+                                  print (qstatus)
+                              else:
+                                  print(runcounter,": ",qstatus)
+                                  if qstatus == JobStatus.RUNNING :
+                                       if running_start == 0 :
+                                          running_start = process_time()
+                                       else :
+                                           if process_time()-running_start > stalled_time :
+                                               running_timeout = True
+                                  if qstatus == JobStatus.ERROR:
+                                       running_timeout = True
+                                  if qstatus == JobStatus.DONE :
+                                       qdone = True
+                                 
+                          if qdone :
+                              # only get here once we get DONE status
+                              result=qjob.result()     # get the result
+                              counts=result.get_counts(qcirc)
+                              print(counts)
+                              maxpattern=max(counts,key=counts.get)
+                              maxvalue=counts[maxpattern]
+                              print("Maximum value:",maxvalue, "Maximum pattern:",maxpattern)
+                              thinking = False  # this cues the display thread to show the qubits in maxpattern
+                          if running_timeout :
+                               print(backend,' Queue appears to have stalled. Restarting Job.')    
+                  else:
+                       print(backend,'busy; waiting to try again')
+          else:
+               print(p,'response to ping; waiting to try again')
+   
+      goAgain=False                    # wait to do it again
+      print('Waiting ',interval,'s before next run...')
+      
+      myTimer=process_time()
+      while not goAgain:
+         for event in hat.stick.get_events():
+            if event.action == 'released' and event.direction == 'middle':      #somebody tapped the joystick -- go now
+               goAgain=True
+               blinky(.001)
+               hat.set_pixels(pixels)
+            if event.action == 'held' and event.direction =='middle' and not shutdown:
+               str = 'HALT'
+               hat.show_message(str, text_colour=(255,255,255))
+               sleep(5)
+               shutdown=True
+            if event.action == 'held' and event.direction !='middle' and Looping:
+               str = 'EXIT IN ' + str(interval)
+               hat.show_message(str, text_colour=(255,255,255))
+               sleep(5)
+               Looping = False
+               break
+         if (process_time()-myTimer>interval):       # 10 seconds elapsed -- go now
+               goAgain=True
 
-termios.tcsetattr(fd, termios.TCSANOW, old_tty_setting)
-termios.tcflush(fd, termios.TCIFLUSH)
+finally:
+   termios.tcsetattr(fd, termios.TCSANOW, old_tty_setting)
+   termios.tcflush(fd, termios.TCIFLUSH)
 
 print("Program Execution ended normally")
