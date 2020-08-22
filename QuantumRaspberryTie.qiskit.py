@@ -112,7 +112,7 @@ angle = 180
 result = None
 runcounter=0
 maxpattern='00000'
-interval=60
+interval=30
 stalled_time = 60 # how many seconds we're willing to wait once a job status is "Running"
 
 thinking=False    # used to tell the display thread when to show the result
