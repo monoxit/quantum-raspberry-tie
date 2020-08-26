@@ -346,6 +346,7 @@ class glow():
             hat.set_pixels(off)
             sleep(1)
             hat.clear()
+            sleep(1)
             path = 'sudo shutdown -P now '
             os.system (path)
          else:
@@ -650,7 +651,7 @@ try:
                shutdown=True
             if event.action == 'held' and event.direction !='middle' and Looping:
                interval = 10
-               str = 'EXIT IN ' + str(interval)
+               str = 'EXIT'
                hat.show_message(str, text_colour=(255,255,255))
                sleep(5)
                Looping = False
@@ -661,5 +662,7 @@ try:
 finally:
    termios.tcsetattr(fd, termios.TCSANOW, old_tty_setting)
    termios.tcflush(fd, termios.TCIFLUSH)
+   hat.clear()
+   sleep(1)
 
 print("Program Execution ended normally")
