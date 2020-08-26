@@ -51,6 +51,10 @@ import termios
 import tty
 
 NUMBER_OF_SHOTS = 512
+INTERVAL = 30
+
+# Interval for executing on real quantum computuer
+LONG_INTERVAL = 60 * 30
 
 #Check any command arguments to see if we're forcing the emulator or changing the backend
 UseEmulator = False
@@ -112,7 +116,7 @@ angle = 180
 result = None
 runcounter=0
 maxpattern='00000'
-interval=30
+interval=INTERVAL
 stalled_time = 60 # how many seconds we're willing to wait once a job status is "Running"
 
 thinking=False    # used to tell the display thread when to show the result
@@ -577,7 +581,10 @@ try:
                       print(qcirc)
                       try:
                           qjob=execute(qcirc, Q, shots=NUMBER_OF_SHOTS, memory=False)
-                          Looping = 'simul' in Q.name()
+                          
+                          if not 'simul' in Q.name():
+                             interval = LONG_INTERVAL
+                             
                           if runcounter < 3: print("Using ", Q.name(), " ... Looping is set ", Looping)
                       except:
                           print("connection problem... half a tick and we'll try again...")
@@ -607,6 +614,8 @@ try:
                                        running_timeout = True
                                   if qstatus == JobStatus.DONE :
                                        qdone = True
+                                       
+                              sleep(2) 
                                  
                           if qdone :
                               # only get here once we get DONE status
@@ -640,6 +649,7 @@ try:
                sleep(5)
                shutdown=True
             if event.action == 'held' and event.direction !='middle' and Looping:
+               interval = 10
                str = 'EXIT IN ' + str(interval)
                hat.show_message(str, text_colour=(255,255,255))
                sleep(5)
