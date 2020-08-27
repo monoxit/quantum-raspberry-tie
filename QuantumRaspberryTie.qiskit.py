@@ -241,6 +241,7 @@ def show_histogram(hat, counts):
    pattern_size = len(list(counts)[0])
 
    if pattern_size > 3:
+      show_histogram_top8(hat, counts)
       return
    
    cbit_patterns = {1:['0','1'],
@@ -268,6 +269,44 @@ def show_histogram(hat, counts):
             red = 255 - blue
             raw_pixels[index+int(number_of_pixels)] = [red,0,blue]
       index+=8
+      
+   hat.set_pixels(raw_pixels)
+
+def show_histogram_top8(hat, counts):
+   if len(counts) < 1:
+      return
+      
+   pattern_size = len(list(counts)[0])
+   per_pixel_value = NUMBER_OF_SHOTS / 8.0
+
+   sorted_counts = sorted(counts.items(), key=lambda x:x[1], reverse=True)
+   
+   raw_pixels = [[0] * 3 for i in range(64)]
+   index = 0
+
+   for pattern, count in sorted_counts:
+      for i in range(len(pattern)):
+         color = [255,0,0]
+         if pattern[i] == '1': color = [0,0,255]
+         raw_pixels[index+i] = color
+      index+=8
+         
+   hat.set_pixels(raw_pixels)
+   sleep(2)
+   
+   raw_pixels = [[0] * 3 for i in range(64)]
+   index = 0
+
+   for pattern, count in sorted_counts:
+      number_of_pixels = count / per_pixel_value
+      raw_pixels[index:index+int(number_of_pixels)] = \
+                [[255,255,255] for i in range(int(number_of_pixels))]
+      if int(number_of_pixels) < 8:
+         color_factor = number_of_pixels - int(number_of_pixels)
+         rgb_value = int(color_factor * 255)
+         raw_pixels[index+int(number_of_pixels)] = [rgb_value,rgb_value,rgb_value]
+      index+=8
+      if index > 64: break
       
    hat.set_pixels(raw_pixels)
 
