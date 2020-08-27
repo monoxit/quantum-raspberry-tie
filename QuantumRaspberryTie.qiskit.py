@@ -217,11 +217,14 @@ def resetrainbow(show=False):
 
 def showqubits(pattern='0000000000000000'):
    global hat
+   
+   cbit_pattern = pattern[::-1]
+   
    for p in range(64):          #first set all pixels off
            pixels[p]=[0,0,0]
    for q in range(len(display)):
-      if q < len(pattern):
-         if pattern[q]=='1':         # if the digit is "1" assign blue
+      if q < len(cbit_pattern):
+         if cbit_pattern[q]=='1':         # if the digit is "1" assign blue
             for p in display[q]:
                pixels[p]=[0,0,255]
          else:                       # otherwise assign it red
@@ -265,11 +268,11 @@ def show_histogram(hat, counts):
 
    number_of_lines = len(cbit_patterns[pattern_size])
    raw_pixels[0:number_of_lines * 8] = \
-             [[255,0,0] for i in range(number_of_lines * 8)]
+             [[0,0,0] for i in range(number_of_lines * 8)]
 
    per_pixel_value = NUMBER_OF_SHOTS / 8.0
 
-   graph_color = [0,0,255]
+   graph_color = [255,255,255]
 
    index = 0
    for cbit_pattern in cbit_patterns[pattern_size]:
