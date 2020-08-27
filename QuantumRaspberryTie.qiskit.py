@@ -250,11 +250,26 @@ def show_histogram(hat, counts):
                     }
    
    raw_pixels = [[0] * 3 for i in range(64)]
+   index = 0
+
+   for cbit_pattern in cbit_patterns[pattern_size]:
+      for i in range(len(cbit_pattern)):
+         color = [255,0,0]
+         if cbit_pattern[i] == '1': color = [0,0,255]
+         raw_pixels[index+i] = color
+      index+=8
+      
+   hat.set_pixels(raw_pixels)
+   sleep(2)
+
+
    number_of_lines = len(cbit_patterns[pattern_size])
    raw_pixels[0:number_of_lines * 8] = \
              [[255,0,0] for i in range(number_of_lines * 8)]
 
    per_pixel_value = NUMBER_OF_SHOTS / 8.0
+
+   graph_color = [0,0,255]
 
    index = 0
    for cbit_pattern in cbit_patterns[pattern_size]:
@@ -262,12 +277,11 @@ def show_histogram(hat, counts):
          count = counts[cbit_pattern]
          number_of_pixels = count / per_pixel_value
          raw_pixels[index:index+int(number_of_pixels)] = \
-                   [[0,0,255] for i in range(int(number_of_pixels))]
+                   [graph_color for i in range(int(number_of_pixels))]
          if int(number_of_pixels) < 8:
             color_factor = number_of_pixels - int(number_of_pixels)
-            blue = int(color_factor * 255)
-            red = 255 - blue
-            raw_pixels[index+int(number_of_pixels)] = [red,0,blue]
+            color = [int(i * color_factor) for i in graph_color]
+            raw_pixels[index+int(number_of_pixels)] = color
       index+=8
       
    hat.set_pixels(raw_pixels)
@@ -284,10 +298,10 @@ def show_histogram_top8(hat, counts):
    raw_pixels = [[0] * 3 for i in range(64)]
    index = 0
 
-   for pattern, count in sorted_counts:
-      for i in range(len(pattern)):
+   for cbit_pattern, count in sorted_counts:
+      for i in range(len(cbit_pattern)):
          color = [255,0,0]
-         if pattern[i] == '1': color = [0,0,255]
+         if cbit_pattern[i] == '1': color = [0,0,255]
          raw_pixels[index+i] = color
       index+=8
          
@@ -297,7 +311,7 @@ def show_histogram_top8(hat, counts):
    raw_pixels = [[0] * 3 for i in range(64)]
    index = 0
 
-   for pattern, count in sorted_counts:
+   for cbit_pattern, count in sorted_counts:
       number_of_pixels = count / per_pixel_value
       raw_pixels[index:index+int(number_of_pixels)] = \
                 [[255,255,255] for i in range(int(number_of_pixels))]
@@ -701,6 +715,7 @@ try:
 finally:
    termios.tcsetattr(fd, termios.TCSANOW, old_tty_setting)
    termios.tcflush(fd, termios.TCIFLUSH)
+   glowing.stop()
    hat.clear()
    sleep(1)
 
