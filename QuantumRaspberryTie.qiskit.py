@@ -307,6 +307,7 @@ def show_histogram_top8(hat, counts):
          if cbit_pattern[i] == '1': color = [0,0,255]
          raw_pixels[index+i] = color
       index+=8
+      if index >= 64: break
          
    hat.set_pixels(raw_pixels)
    sleep(2)
@@ -323,7 +324,7 @@ def show_histogram_top8(hat, counts):
          rgb_value = int(color_factor * 255)
          raw_pixels[index+int(number_of_pixels)] = [rgb_value,rgb_value,rgb_value]
       index+=8
-      if index > 64: break
+      if index >= 64: break
       
    hat.set_pixels(raw_pixels)
 
