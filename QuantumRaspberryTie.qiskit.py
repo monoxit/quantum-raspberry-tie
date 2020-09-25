@@ -50,7 +50,7 @@ import warnings
 import termios
 import tty
 
-NUMBER_OF_SHOTS = 512
+NUMBER_OF_SHOTS = 200
 INTERVAL = 30
 
 # Interval for executing on real quantum computuer
