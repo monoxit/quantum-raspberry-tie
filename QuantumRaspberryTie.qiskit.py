@@ -50,6 +50,8 @@ import warnings
 import termios
 import tty
 
+from packaging import version
+
 NUMBER_OF_SHOTS = 200
 INTERVAL = 30
 
@@ -542,7 +544,7 @@ def ping(website='https://quantumexperience.ng.bluemix.net',repeats=1,wait=0.5,v
 def startIBMQ():
     global Q, backend
     # Written to work with versions of IBMQ-Provider both before and after 0.3 
-    IBMQP_Vers=float(IBMQVersion['qiskit-ibmq-provider'][:3])
+    IBMQP_Vers=IBMQVersion['qiskit-ibmq-provider']
     print('IBMQ Provider v',IBMQP_Vers)
     print ('Pinging IBM Quantum Experience before start')
     p=ping('https://api.quantum-computing.ibm.com',1,0.5,True)
@@ -558,7 +560,7 @@ def startIBMQ():
     print("requested backend: ",backend)
   
     if p==200:
-        if (IBMQP_Vers > 0.2):   # The new authentication technique with provider as the object
+        if version.parse(IBMQP_Vers) > version.parse('0.2'):   # The new authentication technique with provider as the object
             provider0=IBMQ.load_account()
             Q=provider0.get_backend(backend)
         else:                    # The older IBMQ authentication technique
