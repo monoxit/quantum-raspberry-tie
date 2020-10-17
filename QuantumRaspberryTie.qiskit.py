@@ -681,6 +681,12 @@ try:
                               # only get here once we get DONE status
                               result=qjob.result()     # get the result
                               counts=result.get_counts(qcirc)
+                              
+                              counts_key_list = list(counts.keys())
+                              for old_key in counts_key_list:
+                                  new_key = old_key.replace(' ','')
+                                  counts[new_key] = counts.pop(old_key)
+                              
                               print(counts)
                               maxpattern=max(counts,key=counts.get)
                               maxvalue=counts[maxpattern]
