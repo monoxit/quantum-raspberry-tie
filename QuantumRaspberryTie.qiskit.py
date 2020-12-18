@@ -53,10 +53,10 @@ import tty
 from packaging import version
 
 NUMBER_OF_SHOTS = 200
-INTERVAL = 30
+INTERVAL = 60
 
 # Interval for executing on real quantum computuer
-LONG_INTERVAL = 60 * 30
+LONG_INTERVAL = 24 * 60 * 60
 
 #Check any command arguments to see if we're forcing the emulator or changing the backend
 UseEmulator = False
