@@ -43,6 +43,7 @@ print("       ....qiskit")
 from qiskit import IBMQ, QuantumCircuit, execute, transpile, qiskit, BasicAer               # classes for accessing the Quantum Experience IBMQ
 print("       ....qiskit.providers JobStatus")
 from qiskit.providers import JobStatus
+from qiskit.providers.ibmq import least_busy
 IBMQVersion = qiskit.__qiskit_version__
 print("       ....warnings")
 import warnings
@@ -566,7 +567,20 @@ def startIBMQ():
         if p==200:
             if version.parse(IBMQP_Vers) > version.parse('0.2'):   # The new authentication technique with provider as the object
                 provider0=IBMQ.load_account()
-                Q=provider0.get_backend(backend)
+                if backend == 'least_busy':
+                    print('Finding least busy 5 qubits backend...')
+                    small_devices = provider0.backends(filters=lambda x: x.configuration().n_qubits == 5
+                                   and not x.configuration().simulator)
+
+                    Q = least_busy(small_devices)
+                    backend = Q.name()
+
+                    print('Least Busy Backend:', backend)
+                    status = Q.status()
+                    jobs_in_queue = status.pending_jobs
+                    print('Jobs in queue:', jobs_in_queue)
+                else:
+                    Q=provider0.get_backend(backend)
             else:                    # The older IBMQ authentication technique
                 IBMQ.load_accounts()
                 Q=IBMQ.get_backend(backend)
