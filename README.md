@@ -6,9 +6,11 @@ This repo is forked from https://github.com/KPRoche/quantum-raspberry-tie.
 ## Additional options
 
 * -b:qasm_simulator (default backend)
+
     Running on aer simulator on a local computer (Raspberry Pi)
     
 * -b:least_busy
+
     selecting least busy 5 qubits backend automatically
 
 ## Additional functions
