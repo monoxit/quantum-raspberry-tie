@@ -16,6 +16,10 @@ This repo is forked from https://github.com/KPRoche/quantum-raspberry-tie.
 ## Additional functions
 * Showing historgram of countted values per bits pattern.
 
+## Additional OpenQASM samples
+* Coin flip game
+* Quantum telepotation
+
 # quantum-raspberry-tie
 <img src='rainbow_q.jpg' width='150' alt='display while waiting for results' style='float:right;'><br/> 
 Your Raspberry Pi running code on the IBM Q quantum processors via Python 3 -- with results displayed courtesy of the 8x8 LED array on a SenseHat (or SenseHat emulator)!
