@@ -67,6 +67,8 @@ print(sys.argv)
 print ("Number of arguments: ",len(sys.argv))
 # look for a filename option or other starting parameters
 qasmfileinput='expt.qasm'
+backendparm = 'qasm_simulator'
+
 if (len(sys.argv)>1):  
     for p in range (1, len(sys.argv)):
         parameter = sys.argv[p]
@@ -547,17 +549,9 @@ def startIBMQ():
     # Written to work with versions of IBMQ-Provider both before and after 0.3 
     IBMQP_Vers=IBMQVersion['qiskit-ibmq-provider']
     print('IBMQ Provider v',IBMQP_Vers)
-
-    try:
-        backendparm
-        backend = backendparm
-        interval = 300
-    except NameError:
-        # specify the simulator as the backend
-        backend = 'qasm_simulator'
-        
-    print("requested backend: ",backend)  
-
+    backend = backendparm
+    print("requested backend: ",backend)
+    p = 200
     if backend == 'qasm_simulator':
            Q = BasicAer.get_backend('qasm_simulator') 
     else:
@@ -567,7 +561,7 @@ def startIBMQ():
         if p==200:
             if version.parse(IBMQP_Vers) > version.parse('0.2'):   # The new authentication technique with provider as the object
                 provider0=IBMQ.load_account()
-                if backend == 'least_busy':
+                if backendparm == 'least_busy':
                     print('Finding least busy 5 qubits backend...')
                     small_devices = provider0.backends(filters=lambda x: x.configuration().n_qubits == 5
                                    and not x.configuration().simulator)
@@ -584,8 +578,8 @@ def startIBMQ():
             else:                    # The older IBMQ authentication technique
                 IBMQ.load_accounts()
                 Q=IBMQ.get_backend(backend)
-        else:
-            exit()
+                
+    return p
 #-------------------------------------------------------------------------------
 
 
@@ -609,7 +603,6 @@ try:
                
    rainbowTie = Thread(target=glowing.run)     # create the display thread
    rainbowTie.setDaemon(True)
-   startIBMQ()                                  # try to connect and instantiate the IBMQ 
    
    exptfile = open(qasmfilename,'r') # open the file with the OPENQASM code in it
    qasm= exptfile.read()            # read the contents into our experiment string
@@ -631,20 +624,19 @@ try:
        maxpattern='00000'
        print ("circuit width: ",qcirc.width()/2," using 5 qubit display")
    
-   #backend='simulator' 
-   rainbowTie.start()                          # start the display thread
+   # start the display thread
+   rainbowTie.start()
    
    
    while Looping:
       runcounter += 1
       
       try:
-          if backend != 'qasm_simulator':
-              p=ping()
+          p = startIBMQ()
       except:
           print("connection problem with IBMQ")
       else:
-          if backend == 'qasm_simulator' or p==200:
+          if p==200:
               orient()
               showlogo = True
               thinking = True
