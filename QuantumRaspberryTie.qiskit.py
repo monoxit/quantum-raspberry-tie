@@ -734,6 +734,8 @@ try:
                break
          if (process_time()-myTimer>interval):       # 10 seconds elapsed -- go now
                goAgain=True
+                
+         sleep(1)
 
 finally:
    termios.tcsetattr(fd, termios.TCSANOW, old_tty_setting)
