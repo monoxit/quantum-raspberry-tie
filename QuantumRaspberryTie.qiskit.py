@@ -50,6 +50,7 @@ import warnings
 
 import termios
 import tty
+import time
 
 from packaging import version
 
@@ -713,7 +714,7 @@ try:
       goAgain=False                    # wait to do it again
       print('Waiting ',interval,'s before next run...')
       
-      myTimer=process_time()
+      myTimer=time.time()
       while not goAgain:
          for event in hat.stick.get_events():
             if event.action == 'released' and event.direction == 'middle':      #somebody tapped the joystick -- go now
@@ -732,10 +733,10 @@ try:
                sleep(5)
                Looping = False
                break
-         if (process_time()-myTimer>interval):       # 10 seconds elapsed -- go now
+         if (time.time()-myTimer>interval):       # 10 seconds elapsed -- go now
                goAgain=True
                 
-         sleep(1)
+         sleep(0.5)
 
 finally:
    termios.tcsetattr(fd, termios.TCSANOW, old_tty_setting)
